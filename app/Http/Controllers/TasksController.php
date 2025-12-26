@@ -23,7 +23,7 @@ class TasksController extends Controller
         );
     }
 
- 
+
     /**
      * Store a newly created resource in storage.
      */
@@ -32,47 +32,50 @@ class TasksController extends Controller
         $request->validated($request->all());
 
         $task = Task::create([
-           'user_id' => Auth::user()->id,
-           'name' => $request->name,
-           'description' => $request->description,
-           'priority' => $request->priority, 
+            'user_id' => Auth::user()->id,
+            'name' => $request->name,
+            'description' => $request->description,
+            'priority' => $request->priority,
         ]);
 
-        return new TasksResource($task); 
-        }
+        return new TasksResource($task);
+    }
 
     /**
      * Display the specified resource.
      */
     public function show(Task $task)
     {
-        if(Auth::user()->id !== $task->user_id) {
-            return $this->error('', 'You are not authorized to make this request', 403);
-        }
-        return new TasksResource($task);
+     return $this->isAuthenticated($task) ? $this->isAuthenticated($task):  new TasksResource($task);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
+
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Task $task)
     {
-        //
+
+        if (Auth::user()->id !== $task->user_id) {
+            return $this->error('', 'You are not authorized to make this request', 403);
+        }
+        $task->update($request->all());
+
+        return new TasksResource($task);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Task $task)
     {
-        //
+     return $this->isAuthenticated($task) ? $this->isAuthenticated($task) : $task->delete();
+    }
+
+    private function isAuthenticated($task) {
+          if (Auth::user()->id !== $task->user_id) {
+            return $this->error('', 'You are not authorized to make this request', 403);
+        }
     }
 }
